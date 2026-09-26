@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Sign Up — MoneyFlow</title>
+  <meta name="theme-color" content="#0B0F19">
+  <link rel="stylesheet" href="style.css">
+  
+  <style>
+    .auth-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .auth-card {
+      width: 100%;
+      max-width: 400px;
+      padding: 32px;
+      border-radius: 24px;
+      background: var(--surface-light);
+      border: 1px solid var(--border-light);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .auth-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .auth-header h2 {
+      margin-top: 16px;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+    .error-msg {
+      color: var(--accent-red);
+      font-size: 0.9rem;
+      text-align: center;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .auth-footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 0.95rem;
+      color: var(--text-dim);
+    }
+    .auth-footer a {
+      color: var(--accent-blue);
+      text-decoration: none;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  
+  <div class="auth-container">
+    <div class="auth-card glass-panel">
+      <div class="auth-header">
+        <div class="app-badge" style="display:inline-flex;margin:0 auto;">
+          <span class="badge-icon">🌊</span>
+          <span class="badge-title">MoneyFlow</span>
+        </div>
+        <h2>Create Account</h2>
+      </div>
+
+      <div id="auth-error" class="error-msg"></div>
+
+      <form id="signup-form" class="setup-form">
+        <div class="form-group">
+          <label for="fullName">Full Name</label>
+          <div class="input-with-prefix">
+            <input type="text" id="fullName" placeholder="John Doe" required style="padding-left: 16px;">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email</label>
+          <div class="input-with-prefix">
+            <input type="email" id="email" placeholder="you@example.com" required style="padding-left: 16px;">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="input-with-prefix">
+            <input type="password" id="password" placeholder="Min 6 characters" minlength="6" required style="padding-left: 16px;">
+          </div>
+        </div>
+
+        <button type="submit" id="auth-submit-btn" class="btn btn-primary w-100 btn-lg" data-original-text="Sign Up">
+          <span>Sign Up</span>
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Already have an account? <a href="login.html">Log In</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await Auth.redirectIfLoggedIn();
+
+      document.getElementById('signup-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fullName = document.getElementById('fullName').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        await Auth.signup(email, password, fullName);
+      });
+    });
+  </script>
+</body>
+</html>

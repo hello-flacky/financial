@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>MoneyFlow — Know your money. Control your day.</title>
+  <meta name="description" content="A beautiful, simple, mobile-first personal money management web app.">
+  <meta name="theme-color" content="#0B0F19">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Toast Notification System -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Onboarding / Initial Setup Modal -->
+  <div id="setup-modal" class="modal-backdrop">
+    <div class="modal-sheet setup-sheet glass-panel">
+      <div class="setup-header">
+        <div class="app-badge">
+          <span class="badge-icon">🌊</span>
+          <span class="badge-title">MoneyFlow</span>
+        </div>
+        <h2>Know your money.<br>Control your day.</h2>
+        <p class="subtitle">Set up your starting balances in 30 seconds, or explore with realistic demo data.</p>
+      </div>
+
+      <div class="setup-quick-choice">
+        <button id="btn-quick-demo" class="btn btn-secondary w-100 flex-center">
+          <span>✨ Explore with Demo Data</span>
+        </button>
+      </div>
+
+      <div class="divider"><span>OR START FRESH</span></div>
+
+      <form id="setup-form" class="setup-form">
+        <div class="form-group">
+          <label for="setup-available">What money do you have right now?</label>
+          <div class="input-with-prefix">
+            <span class="input-prefix" id="setup-currency-prefix">Rs.</span>
+            <input type="number" id="setup-available" placeholder="0" min="0" step="any" required>
+          </div>
+          <small class="help-text">Cash in hand, bank account balance available to spend.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="setup-savings">Do you already have savings?</label>
+          <div class="input-with-prefix">
+            <span class="input-prefix">Rs.</span>
+            <input type="number" id="setup-savings" placeholder="0" min="0" step="any">
+          </div>
+          <small class="help-text">Emergency fund, fixed deposits, or saved cash.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="setup-salary">Monthly Salary / Regular Income <span class="optional-tag">Optional</span></label>
+          <div class="input-with-prefix">
+            <span class="input-prefix">Rs.</span>
+            <input type="number" id="setup-salary" placeholder="0" min="0" step="any">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 btn-lg">
+          <span>Let's get started 🚀</span>
+        </button>
+      </form>
+      <p class="privacy-notice">🔒 Your financial data stays strictly on this device in your browser's local storage.</p>
+    </div>
+  </div>
+
+  <!-- App Wrapper -->
+  <div class="app-layout">
+
+    <!-- Desktop Sidebar -->
+    <aside class="desktop-sidebar glass-panel">
+      <div class="sidebar-brand">
+        <div class="brand-logo">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          </svg>
+        </div>
+        <div class="brand-info">
+          <span class="brand-name">MoneyFlow</span>
+          <span class="brand-tag">Finance Companion</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-view="home">
+          <span class="nav-icon">🏠</span>
+          <span class="nav-label">Home</span>
+        </button>
+        <button class="nav-item" data-view="daily">
+          <span class="nav-icon">📅</span>
+          <span class="nav-label">Daily</span>
+        </button>
+        <button class="nav-item" data-view="transactions">
+          <span class="nav-icon">💸</span>
+          <span class="nav-label">Transactions</span>
+        </button>
+        <button class="nav-item" data-view="insights">
+          <span class="nav-icon">📊</span>
+          <span class="nav-label">Insights</span>
+        </button>
+        <button class="nav-item" data-view="savings">
+          <span class="nav-icon">💰</span>
+          <span class="nav-label">Savings</span>
+        </button>
+        <button class="nav-item" data-view="settings">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-label">Settings</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="theme-toggle-btn" class="theme-toggle-pill" aria-label="Toggle dark/light mode" style="margin-bottom: 12px;">
+          <span class="theme-icon">🌙</span>
+          <span class="theme-text">Dark Mode</span>
+        </button>
+        <button id="logout-btn" class="theme-toggle-pill" aria-label="Log Out">
+          <span class="theme-icon">🚪</span>
+          <span class="theme-text">Log Out</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-viewport">
+
+      <!-- Top Header -->
+      <header class="app-header">
+        <div class="header-left">
+          <h1 id="greeting-title" class="greeting-title">Good Evening 👋</h1>
+          <p id="greeting-subtitle" class="greeting-subtitle">Here's your money today.</p>
+        </div>
+        <div class="header-right">
+          <span id="header-date" class="date-chip">Today</span>
+          <button id="mobile-theme-btn" class="icon-circle-btn" aria-label="Toggle Theme">🌙</button>
+        </div>
+      </header>
+
+      <!-- ==============================================
+           VIEW: HOME
+      =============================================== -->
+      <section id="view-home" class="app-view active">
+
+        <!-- Main Hero Balance Card -->
+        <div class="hero-balance-card glass-panel">
+          <div class="hero-header">
+            <span class="hero-label">Available Money</span>
+            <div class="status-pill">
+              <span class="status-dot"></span>
+              <span>Available to spend</span>
+            </div>
+          </div>
+          <div class="hero-amount-wrapper">
+            <h2 id="hero-available-balance" class="hero-amount">Rs. 0</h2>
+          </div>
+          <div class="hero-footer">
+            <div class="savings-counter">
+              <span class="sub-label">Total Savings</span>
+              <strong id="hero-total-savings" class="sub-value">Rs. 0</strong>
+            </div>
+            <div class="savings-counter text-right">
+              <span class="sub-label">Starting Balance</span>
+              <span id="hero-starting-balance" class="sub-value text-muted">Rs. 0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions Row -->
+        <div class="quick-actions-grid">
+          <button class="action-btn action-income" id="btn-quick-income">
+            <div class="action-icon-circle">+</div>
+            <div class="action-text">
+              <strong>Money In</strong>
+              <span>Add income</span>
+            </div>
+          </button>
+          <button class="action-btn action-expense" id="btn-quick-expense">
+            <div class="action-icon-circle">−</div>
+            <div class="action-text">
+              <strong>Expense</strong>
+              <span>Record spend</span>
+            </div>
+          </button>
+          <button class="action-btn action-save" id="btn-quick-save">
+            <div class="action-icon-circle">💙</div>
+            <div class="action-text">
+              <strong>Save Money</strong>
+              <span>Transfer to savings</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- Today Summary 3 Cards -->
+        <div class="today-summary-grid">
+          <div class="summary-card glass-panel income-card">
+            <div class="card-icon">↗</div>
+            <div class="card-data">
+              <span class="card-label">Money In</span>
+              <strong id="today-income" class="card-val text-income">+Rs. 0</strong>
+              <small class="card-timeframe">Today</small>
+            </div>
+          </div>
+          <div class="summary-card glass-panel expense-card">
+            <div class="card-icon">↘</div>
+            <div class="card-data">
+              <span class="card-label">Spent</span>
+              <strong id="today-expense" class="card-val text-expense">−Rs. 0</strong>
+              <small class="card-timeframe">Today</small>
+            </div>
+          </div>
+          <div class="summary-card glass-panel savings-card">
+            <div class="card-icon">💙</div>
+            <div class="card-data">
+              <span class="card-label">Saved</span>
+              <strong id="today-savings" class="card-val text-save">Rs. 0</strong>
+              <small class="card-timeframe">Today</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Budget Alert / Progress (Shown if budget is set) -->
+        <div id="home-budget-widget" class="home-budget-widget glass-panel hidden">
+          <div class="widget-header">
+            <div>
+              <span class="widget-title">Monthly Spending Budget</span>
+              <p id="budget-progress-text" class="widget-sub">Rs. 0 of Rs. 0 spent</p>
+            </div>
+            <span id="budget-percentage-badge" class="badge">0%</span>
+          </div>
+          <div class="progress-track">
+            <div id="budget-progress-bar" class="progress-fill" style="width: 0%;"></div>
+          </div>
+          <p id="budget-warning-banner" class="budget-warning hidden">⚠️ You've passed your monthly spending limit.</p>
+        </div>
+
+        <!-- Smart Money Insight Banner -->
+        <div id="home-insight-banner" class="insight-banner glass-panel">
+          <div class="insight-icon">💡</div>
+          <div class="insight-content">
+            <span class="insight-tag">Money Insight</span>
+            <p id="home-insight-text">Welcome to MoneyFlow! Track your daily transactions to unlock smart insights.</p>
+          </div>
+        </div>
+
+        <!-- Today's Activity Section -->
+        <section class="activity-section">
+          <div class="section-header">
+            <h3>Today</h3>
+            <span id="today-tx-count" class="pill-count">0 items</span>
+          </div>
+          <div id="today-tx-list" class="transactions-container">
+            <!-- Dynamic Today items or empty state -->
+          </div>
+        </section>
+
+        <!-- Recent Transactions Section -->
+        <section class="activity-section mt-4">
+          <div class="section-header">
+            <h3>Recent Transactions</h3>
+            <button class="link-btn" id="btn-view-all-tx">View All →</button>
+          </div>
+          <div id="recent-tx-list" class="transactions-container">
+            <!-- Dynamic Recent items -->
+          </div>
+        </section>
+
+      </section>
+
+      <!-- ==============================================
+           VIEW: DAILY
+      =============================================== -->
+      <section id="view-daily" class="app-view">
+        <div class="view-header">
+          <h2>Daily Money View</h2>
+          <p class="subtitle">Inspect cash flow and ending balances for any specific date.</p>
+        </div>
+
+        <!-- Daily Date Navigator -->
+        <div class="daily-picker-card glass-panel">
+          <div class="date-navigator">
+            <button id="btn-daily-prev" class="icon-btn" aria-label="Previous day">◀</button>
+            <div class="current-date-picker-wrap">
+              <input type="date" id="daily-date-input" class="date-input-hidden">
+              <label for="daily-date-input" id="daily-date-label" class="date-label-display">Select Date</label>
+            </div>
+            <button id="btn-daily-next" class="icon-btn" aria-label="Next day">▶</button>
+          </div>
+          <button id="btn-daily-today" class="btn btn-sm btn-outline mt-2">Go to Today</button>
+        </div>
+
+        <!-- Daily Financial Metrics -->
+        <div class="daily-metrics-grid">
+          <div class="metric-card glass-panel">
+            <span class="metric-title">Money In</span>
+            <strong id="daily-metric-in" class="metric-value text-income">+Rs. 0</strong>
+          </div>
+          <div class="metric-card glass-panel">
+            <span class="metric-title">Spent</span>
+            <strong id="daily-metric-out" class="metric-value text-expense">−Rs. 0</strong>
+          </div>
+          <div class="metric-card glass-panel">
+            <span class="metric-title">Saved</span>
+            <strong id="daily-metric-saved" class="metric-value text-save">Rs. 0</strong>
+          </div>
+          <div class="metric-card glass-panel highlight-metric">
+            <span class="metric-title">Ending Balance</span>
+            <strong id="daily-metric-balance" class="metric-value">Rs. 0</strong>
+          </div>
+        </div>
+
+        <!-- Daily Activity List -->
+        <div class="activity-section mt-4">
+          <div class="section-header">
+            <h3 id="daily-list-title">Transactions for Selected Date</h3>
+          </div>
+          <div id="daily-tx-list" class="transactions-container">
+            <!-- Dynamic daily items -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================
+           VIEW: TRANSACTIONS (SEARCH & FILTER)
+      =============================================== -->
+      <section id="view-transactions" class="app-view">
+        <div class="view-header">
+          <h2>All Transactions</h2>
+          <p class="subtitle">Search, filter, edit, or delete any record.</p>
+        </div>
+
+        <div class="filter-controls-card glass-panel">
+          <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="tx-search-input" placeholder="Search by note, category, or amount...">
+            <button id="tx-search-clear" class="clear-icon hidden">×</button>
+          </div>
+
+          <div class="filter-chips-row">
+            <div class="chip-group" id="filter-type-chips">
+              <button class="filter-chip active" data-type="all">All</button>
+              <button class="filter-chip" data-type="income">Money In</button>
+              <button class="filter-chip" data-type="expense">Expenses</button>
+              <button class="filter-chip" data-type="savings">Savings</button>
+            </div>
+
+            <div class="chip-group" id="filter-date-chips">
+              <button class="filter-chip active" data-date="all">All Time</button>
+              <button class="filter-chip" data-date="today">Today</button>
+              <button class="filter-chip" data-date="week">This Week</button>
+              <button class="filter-chip" data-date="month">This Month</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="transactions-results-wrap mt-3">
+          <div class="results-header">
+            <span id="filtered-count-label" class="results-count">0 transactions</span>
+          </div>
+          <div id="all-transactions-list" class="transactions-container">
+            <!-- Full transaction list -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================
+           VIEW: INSIGHTS & ANALYTICS
+      =============================================== -->
+      <section id="view-insights" class="app-view">
+        <div class="view-header">
+          <h2>Insights & Trends</h2>
+          <p class="subtitle">Visual representation of where your money moves.</p>
+        </div>
+
+        <!-- Monthly Money Flow Bar Chart -->
+        <div class="chart-card glass-panel">
+          <div class="chart-card-header">
+            <div>
+              <h3>Monthly Money Flow</h3>
+              <p class="sub-label">Income vs. Spending vs. Savings</p>
+            </div>
+            <select id="monthly-chart-select" class="form-select-sm">
+              <!-- Dynamically populated months -->
+            </select>
+          </div>
+          <div class="chart-canvas-wrapper">
+            <canvas id="monthly-flow-chart" height="220"></canvas>
+          </div>
+          <div class="chart-legend" id="monthly-flow-legend">
+            <span class="legend-item"><span class="legend-dot bg-income"></span> Money In</span>
+            <span class="legend-item"><span class="legend-dot bg-expense"></span> Spent</span>
+            <span class="legend-item"><span class="legend-dot bg-save"></span> Saved</span>
+          </div>
+        </div>
+
+        <!-- Balance Timeline Line Chart -->
+        <div class="chart-card glass-panel mt-4">
+          <div class="chart-card-header">
+            <div>
+              <h3>Your Money Timeline</h3>
+              <p class="sub-label">Available balance progression over time</p>
+            </div>
+          </div>
+          <div class="chart-canvas-wrapper">
+            <canvas id="balance-timeline-chart" height="220"></canvas>
+          </div>
+          <p id="timeline-empty-notice" class="empty-chart-text hidden">Add a few transactions to see your money trend.</p>
+        </div>
+
+        <!-- Expense Category Breakdown Donut Chart -->
+        <div class="chart-card glass-panel mt-4">
+          <div class="chart-card-header">
+            <div>
+              <h3>Where did your money go?</h3>
+              <p class="sub-label">Category distribution for this month</p>
+            </div>
+          </div>
+          <div class="donut-chart-layout">
+            <div class="donut-canvas-container">
+              <canvas id="expense-donut-chart" width="220" height="220"></canvas>
+              <div id="donut-center-info" class="donut-center-info">
+                <span class="center-label">Total Spent</span>
+                <strong id="donut-center-amount" class="center-val">Rs. 0</strong>
+              </div>
+            </div>
+            <div id="donut-categories-legend" class="donut-legend-list">
+              <!-- Category items -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Monthly Summary Cards -->
+        <div class="monthly-summary-card glass-panel mt-4">
+          <div class="summary-title-row">
+            <h3 id="monthly-summary-heading">Month Summary</h3>
+            <span class="pill-badge" id="monthly-savings-rate-badge">0% Saved</span>
+          </div>
+          <div class="summary-details-grid">
+            <div class="detail-box">
+              <span class="detail-label">Total Money In</span>
+              <strong id="sum-total-income" class="text-income">Rs. 0</strong>
+            </div>
+            <div class="detail-box">
+              <span class="detail-label">Total Spent</span>
+              <strong id="sum-total-expense" class="text-expense">Rs. 0</strong>
+            </div>
+            <div class="detail-box">
+              <span class="detail-label">Total Saved</span>
+              <strong id="sum-total-savings" class="text-save">Rs. 0</strong>
+            </div>
+            <div class="detail-box">
+              <span class="detail-label">Net Available Left</span>
+              <strong id="sum-net-available">Rs. 0</strong>
+            </div>
+            <div class="detail-box">
+              <span class="detail-label">Top Spending Category</span>
+              <strong id="sum-top-category">-</strong>
+            </div>
+            <div class="detail-box">
+              <span class="detail-label">Avg. Daily Spend</span>
+              <strong id="sum-avg-daily">Rs. 0</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================
+           VIEW: SAVINGS
+      =============================================== -->
+      <section id="view-savings" class="app-view">
+        <div class="view-header">
+          <h2>Savings & Goals</h2>
+          <p class="subtitle">Safeguard your future. Savings are kept completely separate from spending money.</p>
+        </div>
+
+        <!-- Total Savings Hero Card -->
+        <div class="savings-hero-card glass-panel">
+          <div class="savings-hero-content">
+            <span class="sub-label">Total Savings Balance</span>
+            <h2 id="savings-hero-total" class="savings-hero-val">Rs. 0</h2>
+            <p class="savings-hero-desc">Your protected money, untouched by everyday expenses.</p>
+          </div>
+          <button class="btn btn-primary" id="btn-add-savings-goal">+ New Goal</button>
+        </div>
+
+        <!-- Savings Goals Grid -->
+        <div class="section-header mt-4">
+          <h3>Your Savings Goals</h3>
+          <span id="goals-count" class="pill-count">0 goals</span>
+        </div>
+        <div id="savings-goals-grid" class="goals-grid">
+          <!-- Dynamic savings goal cards -->
+        </div>
+      </section>
+
+      <!-- ==============================================
+           VIEW: SETTINGS
+      =============================================== -->
+      <section id="view-settings" class="app-view">
+        <div class="view-header">
+          <h2>Settings & Preferences</h2>
+          <p class="subtitle">Customize currency, monthly limits, and manage your data.</p>
+        </div>
+
+        <div class="settings-group glass-panel">
+          <h3>Preferences</h3>
+          
+          <div class="setting-item">
+            <div>
+              <strong>Currency Symbol</strong>
+              <p class="sub-label">Default prefix for all numbers (e.g. Rs., $, €, £)</p>
+            </div>
+            <input type="text" id="setting-currency-input" class="form-input-sm" value="Rs." maxlength="5">
+          </div>
+
+          <div class="setting-item">
+            <div>
+              <strong>Monthly Spending Budget</strong>
+              <p class="sub-label">Set a limit to receive warning notifications when exceeded</p>
+            </div>
+            <input type="number" id="setting-budget-input" class="form-input-sm" placeholder="0" min="0">
+          </div>
+
+          <div class="setting-item">
+            <div>
+              <strong>Monthly Salary / Income</strong>
+              <p class="sub-label">Reference monthly expected income</p>
+            </div>
+            <input type="number" id="setting-salary-input" class="form-input-sm" placeholder="0" min="0">
+          </div>
+
+          <div class="setting-item">
+            <div>
+              <strong>Color Theme</strong>
+              <p class="sub-label">Switch between Dark and Light appearances</p>
+            </div>
+            <button id="setting-theme-toggle" class="btn btn-sm btn-outline">Switch to Light Mode</button>
+          </div>
+        </div>
+
+        <!-- Backup & Data -->
+        <div class="settings-group glass-panel mt-4">
+          <h3>Backup & Data Management</h3>
+          <p class="sub-label mb-3">Download a snapshot of your records or restore from a previously saved JSON file.</p>
+
+          <div class="backup-actions-row">
+            <button id="btn-export-backup" class="btn btn-secondary">
+              <span>📥 Export Backup (JSON)</span>
+            </button>
+            <label for="import-backup-file" class="btn btn-outline cursor-pointer">
+              <span>📤 Import Backup (JSON)</span>
+            </label>
+            <input type="file" id="import-backup-file" accept=".json" class="hidden">
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="settings-group glass-panel danger-zone mt-4">
+          <h3>Reset & Demo</h3>
+          <p class="sub-label mb-3">Load fresh demo transactions or completely wipe your local data.</p>
+
+          <div class="danger-actions-row">
+            <button id="btn-load-demo-data" class="btn btn-outline">
+              <span>Load Realistic Demo Data</span>
+            </button>
+            <button id="btn-wipe-all-data" class="btn btn-danger">
+              <span>Clear All Stored Data</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="privacy-card glass-panel mt-4">
+          <span class="privacy-icon">🔒</span>
+          <div>
+            <strong>100% Client-Side Privacy</strong>
+            <p>Your financial data is stored locally on this device. It is not uploaded to any server or external database.</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Mobile Bottom Navigation Bar -->
+  <nav class="mobile-bottom-nav glass-panel">
+    <button class="nav-tab active" data-view="home">
+      <span class="tab-icon">🏠</span>
+      <span class="tab-label">Home</span>
+    </button>
+    <button class="nav-tab" data-view="daily">
+      <span class="tab-icon">📅</span>
+      <span class="tab-label">Daily</span>
+    </button>
+    <button class="nav-tab action-tab-highlight" id="mobile-quick-action-trigger" aria-label="Quick Add">
+      <span class="tab-icon-plus">+</span>
+    </button>
+    <button class="nav-tab" data-view="insights">
+      <span class="tab-icon">📊</span>
+      <span class="tab-label">Insights</span>
+    </button>
+    <button class="nav-tab" data-view="savings">
+      <span class="tab-icon">💰</span>
+      <span class="tab-label">Savings</span>
+    </button>
+    <button class="nav-tab" data-view="settings">
+      <span class="tab-icon">⚙️</span>
+      <span class="tab-label">Settings</span>
+    </button>
+  </nav>
+
+  <!-- ==============================================
+       MODALS & BOTTOM SHEETS
+  =============================================== -->
+
+  <!-- Quick Action Drawer (Mobile Trigger) -->
+  <div id="quick-action-modal" class="modal-backdrop">
+    <div class="modal-sheet action-picker-sheet glass-panel">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h3>What would you like to do?</h3>
+        <button class="close-sheet-btn" data-close="quick-action-modal">✕</button>
+      </div>
+      <div class="picker-options-list">
+        <button class="picker-option income-opt" id="picker-opt-income">
+          <span class="opt-icon">+</span>
+          <div class="opt-details">
+            <strong>Money In</strong>
+            <span>Salary, freelancing, gifts, side income</span>
+          </div>
+        </button>
+        <button class="picker-option expense-opt" id="picker-opt-expense">
+          <span class="opt-icon">−</span>
+          <div class="opt-details">
+            <strong>Record Expense</strong>
+            <span>Food, fuel, bike, shopping, bills, etc.</span>
+          </div>
+        </button>
+        <button class="picker-option save-opt" id="picker-opt-save">
+          <span class="opt-icon">💙</span>
+          <div class="opt-details">
+            <strong>Save Money</strong>
+            <span>Move money safely to a savings goal</span>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Money In Modal -->
+  <div id="modal-income" class="modal-backdrop">
+    <div class="modal-sheet glass-panel">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div class="modal-title-wrap">
+          <span class="title-badge badge-income">+</span>
+          <h3>Add Money In</h3>
+        </div>
+        <button class="close-sheet-btn" data-close="modal-income">✕</button>
+      </div>
+
+      <form id="form-income" class="modal-form">
+        <div class="form-group">
+          <label for="income-amount">Amount</label>
+          <div class="large-amount-input">
+            <span class="currency-tag" id="income-currency-prefix">Rs.</span>
+            <input type="number" id="income-amount" placeholder="0" min="0.01" step="any" required autofocus>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Source</label>
+          <div class="chip-selection-grid" id="income-source-chips">
+            <button type="button" class="select-chip active" data-val="Salary">💼 Salary</button>
+            <button type="button" class="select-chip" data-val="Side Income">⚡ Side Income</button>
+            <button type="button" class="select-chip" data-val="Freelance">💻 Freelance</button>
+            <button type="button" class="select-chip" data-val="Delivery">🛵 Delivery</button>
+            <button type="button" class="select-chip" data-val="Gift">🎁 Gift</button>
+            <button type="button" class="select-chip" data-val="Other">📦 Other</button>
+          </div>
+          <input type="hidden" id="income-source" value="Salary">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="income-date">Date</label>
+            <input type="date" id="income-date" required>
+          </div>
+          <div class="form-group flex-1">
+            <label for="income-time">Time</label>
+            <input type="time" id="income-time" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="income-note">Note <span class="optional-tag">Optional</span></label>
+          <input type="text" id="income-note" placeholder="e.g. Monthly corporate payroll">
+        </div>
+
+        <div class="sheet-actions">
+          <button type="button" class="btn btn-outline" data-close="modal-income">Cancel</button>
+          <button type="submit" class="btn btn-income flex-1">Add Money In</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Expense Modal -->
+  <div id="modal-expense" class="modal-backdrop">
+    <div class="modal-sheet glass-panel">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div class="modal-title-wrap">
+          <span class="title-badge badge-expense">−</span>
+          <h3>Record Expense</h3>
+        </div>
+        <button class="close-sheet-btn" data-close="modal-expense">✕</button>
+      </div>
+
+      <form id="form-expense" class="modal-form">
+        <div class="form-group">
+          <label for="expense-amount">Amount</label>
+          <div class="large-amount-input">
+            <span class="currency-tag" id="expense-currency-prefix">Rs.</span>
+            <input type="number" id="expense-amount" placeholder="0" min="0.01" step="any" required autofocus>
+          </div>
+          <p id="expense-balance-warning" class="input-warning-msg hidden">
+            ⚠️ This expense is higher than your available balance (<span id="warn-available-val">Rs. 0</span>).
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label>Category</label>
+          <div class="category-selection-grid" id="expense-category-chips">
+            <button type="button" class="cat-chip active" data-val="Food"><span class="cat-icon">🍛</span><span class="cat-text">Food</span></button>
+            <button type="button" class="cat-chip" data-val="Fuel"><span class="cat-icon">⛽</span><span class="cat-text">Fuel</span></button>
+            <button type="button" class="cat-chip" data-val="Bike"><span class="cat-icon">🏍️</span><span class="cat-text">Bike</span></button>
+            <button type="button" class="cat-chip" data-val="Housing"><span class="cat-icon">🏠</span><span class="cat-text">Housing</span></button>
+            <button type="button" class="cat-chip" data-val="Phone"><span class="cat-icon">📱</span><span class="cat-text">Phone</span></button>
+            <button type="button" class="cat-chip" data-val="Shopping"><span class="cat-icon">🛍️</span><span class="cat-text">Shopping</span></button>
+            <button type="button" class="cat-chip" data-val="Entertainment"><span class="cat-icon">🎮</span><span class="cat-text">Entertainment</span></button>
+            <button type="button" class="cat-chip" data-val="Bills"><span class="cat-icon">💳</span><span class="cat-text">Bills</span></button>
+            <button type="button" class="cat-chip" data-val="Education"><span class="cat-icon">📚</span><span class="cat-text">Education</span></button>
+            <button type="button" class="cat-chip" data-val="Health"><span class="cat-icon">❤️</span><span class="cat-text">Health</span></button>
+            <button type="button" class="cat-chip" data-val="Other"><span class="cat-icon">📦</span><span class="cat-text">Other</span></button>
+          </div>
+          <input type="hidden" id="expense-category" value="Food">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="expense-date">Date</label>
+            <input type="date" id="expense-date" required>
+          </div>
+          <div class="form-group flex-1">
+            <label for="expense-time">Time</label>
+            <input type="time" id="expense-time" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="expense-note">Note <span class="optional-tag">Optional</span></label>
+          <input type="text" id="expense-note" placeholder="e.g. Lunch at cafe">
+        </div>
+
+        <div class="sheet-actions">
+          <button type="button" class="btn btn-outline" data-close="modal-expense">Cancel</button>
+          <button type="submit" class="btn btn-expense flex-1">Save Expense</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Save Money Modal -->
+  <div id="modal-save" class="modal-backdrop">
+    <div class="modal-sheet glass-panel">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div class="modal-title-wrap">
+          <span class="title-badge badge-save">💙</span>
+          <h3>Save Money</h3>
+        </div>
+        <button class="close-sheet-btn" data-close="modal-save">✕</button>
+      </div>
+
+      <form id="form-save" class="modal-form">
+        <div class="form-group">
+          <label for="save-amount">Amount to Transfer</label>
+          <div class="large-amount-input">
+            <span class="currency-tag" id="save-currency-prefix">Rs.</span>
+            <input type="number" id="save-amount" placeholder="0" min="0.01" step="any" required autofocus>
+          </div>
+          <p id="save-balance-warning" class="input-warning-msg hidden">
+            ⚠️ Transfer amount exceeds your available money.
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label for="save-goal-select">Destination Savings Goal</label>
+          <select id="save-goal-select" class="form-select" required>
+            <!-- Dynamically populated goals -->
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="save-date">Date</label>
+            <input type="date" id="save-date" required>
+          </div>
+          <div class="form-group flex-1">
+            <label for="save-time">Time</label>
+            <input type="time" id="save-time" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="save-note">Note <span class="optional-tag">Optional</span></label>
+          <input type="text" id="save-note" placeholder="e.g. Monthly emergency reserve deposit">
+        </div>
+
+        <div class="sheet-actions">
+          <button type="button" class="btn btn-outline" data-close="modal-save">Cancel</button>
+          <button type="submit" class="btn btn-save flex-1">Transfer to Savings</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add / Edit Savings Goal Modal -->
+  <div id="modal-goal" class="modal-backdrop">
+    <div class="modal-sheet glass-panel">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h3 id="goal-modal-title">New Savings Goal</h3>
+        <button class="close-sheet-btn" data-close="modal-goal">✕</button>
+      </div>
+
+      <form id="form-goal" class="modal-form">
+        <input type="hidden" id="goal-id" value="">
+
+        <div class="form-group">
+          <label for="goal-name-input">Goal Name</label>
+          <input type="text" id="goal-name-input" placeholder="e.g. Emergency Fund, New Bike, Travel" required>
+        </div>
+
+        <div class="form-group">
+          <label for="goal-target-input">Target Amount</label>
+          <div class="input-with-prefix">
+            <span class="input-prefix">Rs.</span>
+            <input type="number" id="goal-target-input" placeholder="100000" min="1" step="any" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="goal-current-input">Starting Allocated Amount</label>
+          <div class="input-with-prefix">
+            <span class="input-prefix">Rs.</span>
+            <input type="number" id="goal-current-input" placeholder="0" min="0" step="any">
+          </div>
+          <small class="help-text">Existing savings already put aside for this goal.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="goal-icon-select">Goal Icon</label>
+          <div class="chip-selection-grid icon-grid" id="goal-icon-chips">
+            <button type="button" class="select-chip active" data-val="🛡️">🛡️ Fund</button>
+            <button type="button" class="select-chip" data-val="🏍️">🏍️ Bike</button>
+            <button type="button" class="select-chip" data-val="💻">💻 Laptop</button>
+            <button type="button" class="select-chip" data-val="✈️">✈️ Travel</button>
+            <button type="button" class="select-chip" data-val="📚">📚 Education</button>
+            <button type="button" class="select-chip" data-val="📈">📈 Invest</button>
+            <button type="button" class="select-chip" data-val="🏠">🏠 House</button>
+            <button type="button" class="select-chip" data-val="🎯">🎯 Other</button>
+          </div>
+          <input type="hidden" id="goal-icon-input" value="🛡️">
+        </div>
+
+        <div class="sheet-actions">
+          <button type="button" class="btn btn-outline" data-close="modal-goal">Cancel</button>
+          <button type="submit" class="btn btn-primary flex-1">Save Goal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Transaction Modal -->
+  <div id="modal-edit-tx" class="modal-backdrop">
+    <div class="modal-sheet glass-panel">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h3>Edit Transaction</h3>
+        <button class="close-sheet-btn" data-close="modal-edit-tx">✕</button>
+      </div>
+
+      <form id="form-edit-tx" class="modal-form">
+        <input type="hidden" id="edit-tx-id" value="">
+        <input type="hidden" id="edit-tx-type" value="">
+
+        <div class="form-group">
+          <label for="edit-tx-amount">Amount</label>
+          <div class="large-amount-input">
+            <span class="currency-tag">Rs.</span>
+            <input type="number" id="edit-tx-amount" min="0.01" step="any" required>
+          </div>
+        </div>
+
+        <div class="form-group" id="edit-category-group">
+          <label for="edit-tx-category">Category / Source / Goal</label>
+          <input type="text" id="edit-tx-category" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="edit-tx-date">Date</label>
+            <input type="date" id="edit-tx-date" required>
+          </div>
+          <div class="form-group flex-1">
+            <label for="edit-tx-time">Time</label>
+            <input type="time" id="edit-tx-time" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-tx-note">Note</label>
+          <input type="text" id="edit-tx-note">
+        </div>
+
+        <div class="sheet-actions">
+          <button type="button" class="btn btn-outline" data-close="modal-edit-tx">Cancel</button>
+          <button type="submit" class="btn btn-primary flex-1">Update Transaction</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Generic Confirmation Modal -->
+  <div id="modal-confirm" class="modal-backdrop">
+    <div class="modal-dialog glass-panel">
+      <div class="dialog-icon" id="confirm-dialog-icon">⚠️</div>
+      <h3 id="confirm-dialog-title">Are you sure?</h3>
+      <p id="confirm-dialog-message" class="sub-label mt-1">This action cannot be undone.</p>
+      <div class="dialog-actions mt-4">
+        <button id="btn-confirm-cancel" class="btn btn-outline flex-1">Cancel</button>
+        <button id="btn-confirm-proceed" class="btn btn-danger flex-1">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/database.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
