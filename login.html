@@ -2,109 +2,105 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Login — MoneyFlow</title>
-  <meta name="theme-color" content="#0B0F19">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Login | MoneyFlow</title>
   <link rel="stylesheet" href="style.css">
-  
-  <style>
-    .auth-container {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
-    .auth-card {
-      width: 100%;
-      max-width: 400px;
-      padding: 32px;
-      border-radius: 24px;
-      background: var(--surface-light);
-      border: 1px solid var(--border-light);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    }
-    .auth-header {
-      text-align: center;
-      margin-bottom: 32px;
-    }
-    .auth-header h2 {
-      margin-top: 16px;
-      font-size: 1.5rem;
-      font-weight: 700;
-    }
-    .error-msg {
-      color: var(--accent-red);
-      font-size: 0.9rem;
-      text-align: center;
-      margin-bottom: 16px;
-      display: none;
-    }
-    .auth-footer {
-      text-align: center;
-      margin-top: 24px;
-      font-size: 0.95rem;
-      color: var(--text-dim);
-    }
-    .auth-footer a {
-      color: var(--accent-blue);
-      text-decoration: none;
-      font-weight: 600;
-    }
-  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  
-  <div class="auth-container">
-    <div class="auth-card glass-panel">
-      <div class="auth-header">
-        <div class="app-badge" style="display:inline-flex;margin:0 auto;">
-          <span class="badge-icon">🌊</span>
-          <span class="badge-title">MoneyFlow</span>
-        </div>
-        <h2>Welcome Back</h2>
+
+  <div class="auth-wrapper">
+    <div class="glass-card auth-card">
+      <div class="auth-logo">
+        <div class="brand-icon" style="width: 48px; height: 48px; font-size: 24px; margin-bottom: 16px;">M</div>
+        <h1 class="text-2xl font-bold">MoneyFlow</h1>
+        <p class="text-secondary text-sm mt-2">Know your money. Control your day.</p>
       </div>
 
-      <div id="auth-error" class="error-msg"></div>
+      <div id="login-error" class="auth-error"></div>
 
-      <form id="login-form" class="setup-form">
+      <form id="login-form">
         <div class="form-group">
-          <label for="email">Email</label>
-          <div class="input-with-prefix">
-            <input type="email" id="email" placeholder="you@example.com" required style="padding-left: 16px;">
+          <label class="form-label">Email address</label>
+          <input type="email" id="email" class="form-input" required placeholder="you@example.com">
+        </div>
+        
+        <div class="form-group">
+          <div class="flex justify-between items-center mb-2">
+            <label class="form-label" style="margin: 0;">Password</label>
+            <a href="#" class="text-xs">Forgot password?</a>
           </div>
+          <input type="password" id="password" class="form-input" required placeholder="••••••••">
         </div>
 
         <div class="form-group">
-          <label for="password">Password</label>
-          <div class="input-with-prefix">
-            <input type="password" id="password" placeholder="••••••••" required style="padding-left: 16px;">
-          </div>
+          <label class="form-checkbox">
+            <input type="checkbox" id="remember-me" checked>
+            <span class="text-sm text-secondary">Trust this device (Keep me logged in)</span>
+          </label>
         </div>
 
-        <button type="submit" id="auth-submit-btn" class="btn btn-primary w-100 btn-lg" data-original-text="Log In">
-          <span>Log In</span>
+        <button type="submit" class="btn btn-primary btn-block mt-6" id="btn-login">
+          Sign In
         </button>
       </form>
 
-      <div class="auth-footer">
-        Don't have an account? <a href="signup.html">Sign Up</a>
+      <div class="text-center mt-6 text-sm text-secondary">
+        Don't have an account? <a href="signup.html" class="font-semibold text-primary">Sign up</a>
       </div>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
   <script src="js/auth.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
-      await Auth.redirectIfLoggedIn();
+      const session = await Auth.getSession();
+      if (session) {
+        window.location.href = 'index.html'; // Redirect to dashboard if already logged in
+      }
 
       document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
-        await Auth.login(email, password);
+        const rememberMe = document.getElementById('remember-me').checked;
+        const btn = document.getElementById('btn-login');
+        const errorDiv = document.getElementById('login-error');
+
+        btn.disabled = true;
+        btn.textContent = 'Signing in...';
+        errorDiv.style.display = 'none';
+
+        // Actually the Supabase JS client handles local storage vs session storage globally
+        // based on how it's initialized. But we can adjust storage key or just log them in.
+        // For true "don't remember me", we would need to initialize Supabase with sessionStorage.
+        // For now, we will perform standard login, and if rememberMe is false, 
+        // we could listen to tab close and sign out, or use sessionStorage in our config.
+        if (!rememberMe) {
+            sessionStorage.setItem('ephemeral_session', 'true');
+            // Re-initialize Supabase client with sessionStorage before signing in
+            window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+              auth: { storage: window.sessionStorage, autoRefreshToken: true, persistSession: true }
+            });
+            // Monkey patch Auth.js just for this login call
+            Auth.signIn = async (email, password) => {
+              return await window.supabaseClient.auth.signInWithPassword({ email, password });
+            }
+        } else {
+            sessionStorage.removeItem('ephemeral_session');
+        }
+
+        const { data, error } = await Auth.signIn(email, password);
+
+        if (error) {
+          errorDiv.textContent = error.message;
+          errorDiv.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = 'Sign In';
+        } else {
+          window.location.href = 'index.html';
+        }
       });
     });
   </script>

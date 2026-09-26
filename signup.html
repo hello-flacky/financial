@@ -2,118 +2,94 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Sign Up — MoneyFlow</title>
-  <meta name="theme-color" content="#0B0F19">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Sign Up | MoneyFlow</title>
   <link rel="stylesheet" href="style.css">
-  
-  <style>
-    .auth-container {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
-    .auth-card {
-      width: 100%;
-      max-width: 400px;
-      padding: 32px;
-      border-radius: 24px;
-      background: var(--surface-light);
-      border: 1px solid var(--border-light);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    }
-    .auth-header {
-      text-align: center;
-      margin-bottom: 32px;
-    }
-    .auth-header h2 {
-      margin-top: 16px;
-      font-size: 1.5rem;
-      font-weight: 700;
-    }
-    .error-msg {
-      color: var(--accent-red);
-      font-size: 0.9rem;
-      text-align: center;
-      margin-bottom: 16px;
-      display: none;
-    }
-    .auth-footer {
-      text-align: center;
-      margin-top: 24px;
-      font-size: 0.95rem;
-      color: var(--text-dim);
-    }
-    .auth-footer a {
-      color: var(--accent-blue);
-      text-decoration: none;
-      font-weight: 600;
-    }
-  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  
-  <div class="auth-container">
-    <div class="auth-card glass-panel">
-      <div class="auth-header">
-        <div class="app-badge" style="display:inline-flex;margin:0 auto;">
-          <span class="badge-icon">🌊</span>
-          <span class="badge-title">MoneyFlow</span>
-        </div>
-        <h2>Create Account</h2>
+
+  <div class="auth-wrapper">
+    <div class="glass-card auth-card">
+      <div class="auth-logo">
+        <div class="brand-icon" style="width: 48px; height: 48px; font-size: 24px; margin-bottom: 16px;">M</div>
+        <h1 class="text-2xl font-bold">Create Account</h1>
+        <p class="text-secondary text-sm mt-2">Start taking control of your finances.</p>
       </div>
 
-      <div id="auth-error" class="error-msg"></div>
+      <div id="signup-error" class="auth-error"></div>
+      <div id="signup-success" class="auth-error" style="background-color: rgba(16, 185, 129, 0.1); color: var(--income); display: none;"></div>
 
-      <form id="signup-form" class="setup-form">
+      <form id="signup-form">
         <div class="form-group">
-          <label for="fullName">Full Name</label>
-          <div class="input-with-prefix">
-            <input type="text" id="fullName" placeholder="John Doe" required style="padding-left: 16px;">
-          </div>
+          <label class="form-label">Full Name</label>
+          <input type="text" id="name" class="form-input" required placeholder="John Doe">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Email address</label>
+          <input type="email" id="email" class="form-input" required placeholder="you@example.com">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" id="password" class="form-input" required minlength="6" placeholder="••••••••">
         </div>
 
         <div class="form-group">
-          <label for="email">Email</label>
-          <div class="input-with-prefix">
-            <input type="email" id="email" placeholder="you@example.com" required style="padding-left: 16px;">
-          </div>
+          <label class="form-label">Confirm Password</label>
+          <input type="password" id="confirm-password" class="form-input" required minlength="6" placeholder="••••••••">
         </div>
 
-        <div class="form-group">
-          <label for="password">Password</label>
-          <div class="input-with-prefix">
-            <input type="password" id="password" placeholder="Min 6 characters" minlength="6" required style="padding-left: 16px;">
-          </div>
-        </div>
-
-        <button type="submit" id="auth-submit-btn" class="btn btn-primary w-100 btn-lg" data-original-text="Sign Up">
-          <span>Sign Up</span>
+        <button type="submit" class="btn btn-primary btn-block mt-6" id="btn-signup">
+          Sign Up
         </button>
       </form>
 
-      <div class="auth-footer">
-        Already have an account? <a href="login.html">Log In</a>
+      <div class="text-center mt-6 text-sm text-secondary">
+        Already have an account? <a href="login.html" class="font-semibold text-primary">Log in</a>
       </div>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
   <script src="js/auth.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      await Auth.redirectIfLoggedIn();
+    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      const btn = document.getElementById('btn-signup');
+      const errorDiv = document.getElementById('signup-error');
+      const successDiv = document.getElementById('signup-success');
 
-      document.getElementById('signup-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const fullName = document.getElementById('fullName').value;
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        await Auth.signup(email, password, fullName);
-      });
+      if (password !== confirmPassword) {
+        errorDiv.textContent = 'Passwords do not match.';
+        errorDiv.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Creating account...';
+      errorDiv.style.display = 'none';
+      successDiv.style.display = 'none';
+
+      const { data, error } = await Auth.signUp(email, password, name);
+
+      if (error) {
+        errorDiv.textContent = error.message;
+        errorDiv.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Sign Up';
+      } else {
+        successDiv.textContent = 'Account created successfully! Redirecting...';
+        successDiv.style.display = 'block';
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 1500);
+      }
     });
   </script>
 </body>
